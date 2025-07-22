@@ -1,10 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Card, Flex, Skeleton, Spin, Typography } from 'antd';
+import { Badge, Card, Flex, Skeleton, Spin, Tag, Typography } from 'antd';
 import { useFetchPosts } from '@/entities/post/api/post.api';
+import type { PostTag } from '@/entities/post/model/post.model';
+import HeartIcon from '@/shared/ui/icons/HeartIcon';
+import DislikeIcon from '@/shared/ui/icons/DislikeIcon';
 
 const LOAD_MORE_THRESHOLD = 25;
 const POSTS_LIMIT = 10;
 const SKELETON_POSTS_NUMBER = 4;
+const TAGS_COLORS: Record<PostTag, string> = {
+  american: "blue",
+  french: "volcano",
+  english: "orange",
+  fiction: "gold",
+  history: "red",
+  love: "magenta",
+  magical: "green",
+  mystery: "cyan",
+  classic: "gray",
+  crime: "purple",
+};
 
 const PostsList = () => {
   const [offset, setOffset] = useState(0);
@@ -38,7 +53,16 @@ const PostsList = () => {
     <Flex gap="middle" wrap justify='center' style={{ marginBottom: 250 }}>
       {data?.posts?.map((post) => (
         <Card key={post.id} title={post.title} style={{ width: '30%', minWidth: 300 }}>
-          <Typography.Paragraph>{post.body}</Typography.Paragraph>
+          <Typography.Paragraph className='truncate-3-lines'>{post.body}</Typography.Paragraph>
+          {post.tags?.map(tag => <Tag key={tag} color={TAGS_COLORS[tag]}>{tag}</Tag>)}
+          <Flex style={{ marginTop: 24 }} gap={24}>
+            <Badge count={post.reactions.likes} size='small' color="red" overflowCount={999}>
+              <HeartIcon />
+            </Badge>
+            <Badge count={post.reactions.dislikes} size="small" color="gold" overflowCount={999}>
+              <DislikeIcon />
+            </Badge>
+          </Flex>
         </Card>
       ))}
       <div style={{ width: "100%" }}></div>
