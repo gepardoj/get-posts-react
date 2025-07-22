@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Badge, Card, Flex, Skeleton, Spin, Tag, Typography } from 'antd';
+import { Badge, Card, Flex, Skeleton, Tag, Typography } from 'antd';
 import { useFetchPosts } from '@/entities/post/api/post.api';
 import type { PostTag } from '@/entities/post/model/post.model';
 import HeartIcon from '@/shared/ui/icons/HeartIcon';
 import DislikeIcon from '@/shared/ui/icons/DislikeIcon';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '@/app/store';
-import { setPosts } from '@/entities/post/model/post.slice';
+import { addPosts } from '@/entities/post/model/post.slice';
 
 const LOAD_MORE_THRESHOLD = 25;
 const POSTS_LIMIT = 10;
-const SKELETON_POSTS_NUMBER = 4;
+const SKELETON_POSTS_NUMBER = 10;
+
 const TAGS_COLORS: Record<PostTag, string> = {
   american: "blue",
   french: "volcano",
@@ -28,6 +29,7 @@ const PostsList = () => {
   const dispatch = useDispatch();
   const posts = useSelector((state: RootState) => state.post.posts);
   const [offset, setOffset] = useState(0);
+  const [lastPostsNumber, setLastPostsNumber] = useState(POSTS_LIMIT);
   const { data, isLoading, error } = useFetchPosts(offset, POSTS_LIMIT);
 
   useEffect(() => {
@@ -48,15 +50,16 @@ const PostsList = () => {
 
   useEffect(() => {
     if (data) {
-      dispatch(setPosts(data.posts));
+      dispatch(addPosts(data.posts));
+    }
+    if (data !== undefined) {
+      setLastPostsNumber(data.limit);
     }
   }, [data]);
 
-  if (isLoading) return <Spin />;
-
   if (error !== null) return <Typography.Paragraph type="danger">{error.message}</Typography.Paragraph>;
 
-  if (posts?.length === 0) {
+  if (!isLoading && posts?.length === 0) {
     return <Typography.Paragraph type="warning">No posts found</Typography.Paragraph>;
   }
 
@@ -76,9 +79,7 @@ const PostsList = () => {
           </Flex>
         </Card>
       ))}
-      <div style={{ width: "100%" }}></div>
-
-      {data?.limit === POSTS_LIMIT && Array(SKELETON_POSTS_NUMBER).fill(0).map((_, i) =>
+      {lastPostsNumber === POSTS_LIMIT && isLoading && Array(SKELETON_POSTS_NUMBER).fill(0).map((_, i) =>
         <Card key={i} style={{ width: '30%', minWidth: 300 }}>
           <Skeleton active />
         </Card>
